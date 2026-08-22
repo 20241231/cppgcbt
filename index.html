@@ -1,43 +1,12 @@
-<!DOCTYPE html>
-<html lang="ko" class="h-full bg-slate-900 text-slate-100">
+<!doctype html>
+<html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CPPG CBT 합격 마스터</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:#0f172a}::-webkit-scrollbar-thumb{background:#334155;border-radius:4px}::-webkit-scrollbar-thumb:hover{background:#475569}
-.grid-omr{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.5rem}@media(min-width:640px){.grid-omr{grid-template-columns:repeat(10,minmax(0,1fr))}}
-.option-card{transition:.18s}.option-card:hover{transform:translateY(-1px)}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101816">
+  <meta name="description" content="1,000문항 CPPG 문제은행 CBT">
+  <title>CPPG 1000 문제은행 CBT</title>
+  <link rel="stylesheet" href="./style.css">
 </head>
-<body class="h-full flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
-<header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-<div class="flex items-center space-x-3"><div class="p-2 bg-indigo-600 rounded-lg"><i class="fa-solid fa-shield-halved text-xl"></i></div><div><h1 class="text-lg font-bold tracking-wide">CPPG CBT 합격 마스터</h1><p class="text-xs text-slate-400">개인정보관리사 기출문제 풀이 · 문제은행 기반</p></div></div>
-<div id="quizHeaderInfo" class="hidden flex items-center space-x-3 sm:space-x-6"><div class="flex items-center space-x-2 bg-slate-900 px-3 py-1.5 rounded-md border border-slate-700"><i class="fa-regular fa-clock text-amber-400"></i><span id="timer" class="font-mono font-semibold text-amber-300">120:00</span></div><div class="hidden md:flex items-center space-x-2 bg-slate-900 px-3 py-1.5 rounded-md border border-slate-700 text-xs"><span class="text-slate-400">풀이 완료:</span><b id="answeredCount" class="text-indigo-400">0</b><span class="text-slate-500">/</span><span id="totalCountDisplay">100</span></div><button onclick="submitQuizConfirm()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-1.5 rounded-md font-semibold text-sm"><i class="fa-solid fa-check mr-1"></i>답안 제출</button></div>
-</div></header>
-<main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col">
-<section id="homeView" class="flex-1 flex flex-col justify-center items-center py-10"><div class="max-w-3xl w-full text-center space-y-6">
-<div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium"><i class="fa-solid fa-sparkles"></i><span>실제 문제은행을 기반으로 중복 없이 랜덤 출제</span></div>
-<h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight">내일 시험 완벽 대비!<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">CPPG 실전 CBT</span></h2>
-<p class="text-slate-400 text-sm sm:text-base leading-relaxed">현재 <strong id="total-db-count" class="text-indigo-300">0</strong>문제의 문제은행에서 문제를 골라 풉니다.<br>오답노트와 상세 해설을 이용해 취약 문제를 반복 학습하세요.</p>
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left pt-4">
-<button onclick="startQuiz(100)" class="group bg-slate-800/80 hover:bg-slate-800 p-6 rounded-2xl border border-slate-700 hover:border-indigo-500/50 transition shadow-xl text-left"><div class="w-12 h-12 bg-indigo-600/20 text-indigo-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition"><i class="fa-solid fa-file-signature text-2xl"></i></div><h3 class="text-lg font-bold group-hover:text-indigo-300">실전 모의고사 <span class="text-indigo-400">100문항</span></h3><p class="text-xs text-slate-400 mt-2">100문제를 중복 없이 랜덤 출제합니다. 제한시간 120분.</p><div class="mt-4 text-xs font-semibold text-indigo-400">시험 시작하기 <i class="fa-solid fa-arrow-right ml-1"></i></div></button>
-<button onclick="startQuiz(10)" class="group bg-slate-800/80 hover:bg-slate-800 p-6 rounded-2xl border border-slate-700 hover:border-cyan-500/50 transition shadow-xl text-left"><div class="w-12 h-12 bg-cyan-600/20 text-cyan-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition"><i class="fa-solid fa-bolt text-2xl"></i></div><h3 class="text-lg font-bold group-hover:text-cyan-300">빠른 풀이 <span class="text-cyan-400">10문항</span></h3><p class="text-xs text-slate-400 mt-2">짧게 핵심 문제를 풀며 개념을 점검합니다. 제한시간 15분.</p><div class="mt-4 text-xs font-semibold text-cyan-400">바로 풀기 <i class="fa-solid fa-arrow-right ml-1"></i></div></button>
-</div>
-<button onclick="startWrongQuiz()" class="w-full bg-rose-950/20 hover:bg-rose-950/30 border border-rose-900/50 hover:border-rose-500/50 rounded-2xl p-4 text-left transition"><div class="flex items-center justify-between"><div><div class="text-sm font-bold text-rose-300"><i class="fa-solid fa-book-open mr-2"></i>오답노트</div><p class="text-xs text-slate-400 mt-1">틀린 문제만 다시 풀고 맞힌 문제는 자동으로 오답노트에서 제거합니다.</p></div><span class="text-2xl font-black text-rose-400" id="wrong-count">0</span></div></button>
-<div class="pt-6 border-t border-slate-800 grid grid-cols-3 gap-2 text-center text-xs text-slate-400"><div><i class="fa-solid fa-shuffle text-indigo-400 mr-1"></i> 중복 없는 랜덤</div><div><i class="fa-solid fa-lightbulb text-emerald-400 mr-1"></i> 상세 해설</div><div><i class="fa-solid fa-bookmark text-amber-400 mr-1"></i> 검토 표시</div></div>
-</div></section>
-<section id="quizView" class="hidden flex-1 flex flex-col lg:flex-row gap-6">
-<div class="flex-1 bg-slate-800/90 rounded-2xl border border-slate-700 p-5 sm:p-7 flex flex-col shadow-xl"><div class="flex-1">
-<div class="flex items-center justify-between pb-4 mb-5 border-b border-slate-700/80"><span id="questionCategory" class="px-2.5 py-1 bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 rounded text-xs font-semibold">분류</span><span class="text-xs text-slate-400">문제 <b id="currentQNum" class="text-white text-base">1</b> / <span id="totalQNum">100</span></span></div>
-<h3 id="questionText" class="text-base sm:text-lg font-bold leading-relaxed mb-6">문제를 불러오는 중입니다...</h3><div id="optionsContainer" class="space-y-3"></div></div>
-<div class="flex items-center justify-between pt-6 mt-6 border-t border-slate-700/80"><button id="prevBtn" onclick="navigateQuestion(-1)" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 rounded-lg text-sm font-semibold"><i class="fa-solid fa-chevron-left mr-2"></i>이전</button><button id="bookmarkBtn" onclick="toggleBookmark()" class="px-3 py-2 bg-slate-900/60 border border-slate-700 hover:border-amber-500 text-slate-400 rounded-lg text-xs font-medium"><i id="bookmarkIcon" class="fa-regular fa-bookmark mr-1"></i>검토 표시</button><button id="nextBtn" onclick="navigateQuestion(1)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-semibold">다음 문제 <i class="fa-solid fa-chevron-right ml-2"></i></button></div>
-</div>
-<aside class="w-full lg:w-80 bg-slate-800/90 rounded-2xl border border-slate-700 p-5 flex flex-col shadow-xl"><div class="flex-1"><div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-700"><h4 class="font-bold text-sm"><i class="fa-solid fa-table-cells text-indigo-400 mr-2"></i>OMR 답안 현황</h4><span class="text-[11px] text-slate-400">클릭하여 이동</span></div><div id="omrGrid" class="grid-omr max-h-[500px] overflow-y-auto p-1 pr-2"></div></div><div class="pt-4 border-t border-slate-700 grid grid-cols-3 gap-2 text-[11px] text-slate-400 text-center"><div><span class="inline-block w-2.5 h-2.5 bg-slate-700 rounded-full mr-1"></span>미풀이</div><div><span class="inline-block w-2.5 h-2.5 bg-indigo-600 rounded-full mr-1"></span>답안</div><div><span class="inline-block w-2.5 h-2.5 bg-amber-500 rounded-full mr-1"></span>검토</div></div></aside>
-</section>
-<section id="resultView" class="hidden flex-1 flex flex-col space-y-6"><div class="bg-slate-800/90 rounded-2xl border border-slate-700 p-6 sm:p-8 shadow-xl text-center"><div id="scoreBadge" class="inline-flex px-4 py-1.5 rounded-full text-xs font-bold mb-3"></div><h2 class="text-2xl sm:text-3xl font-extrabold mb-2">모의고사 성적 결과</h2><p class="text-slate-400 text-sm">정답률과 오답을 확인하고 틀린 문제는 오답노트에서 다시 풀어보세요.</p><div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto"><div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700"><span class="block text-xs text-slate-400 mb-1">최종 점수</span><b id="scoreText" class="text-3xl text-indigo-400">0점</b></div><div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700"><span class="block text-xs text-slate-400 mb-1">정답 문항</span><b id="correctCountText" class="text-3xl text-emerald-400">0 / 0</b></div><div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700"><span class="block text-xs text-slate-400 mb-1">소요 시간</span><b id="timeTakenText" class="text-2xl text-amber-400">00:00</b></div><div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700"><span class="block text-xs text-slate-400 mb-1">정답률</span><b id="accuracyText" class="text-2xl text-cyan-400">0%</b></div></div><div class="mt-8 flex justify-center gap-3"><button onclick="restartQuiz()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-sm"><i class="fa-solid fa-rotate-right mr-1"></i>새 문제</button><button onclick="startWrongQuiz()" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl font-bold text-sm"><i class="fa-solid fa-xmark text-rose-400 mr-1"></i>오답노트</button><button onclick="showMenu()" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl font-bold text-sm">메인으로</button></div></div>
-<div class="bg-slate-800/90 rounded-2xl border border-slate-700 p-6 shadow-xl"><div class="flex items-center justify-between pb-4 mb-5 border-b border-slate-700"><h3 class="text-lg font-bold"><i class="fa-solid fa-list-check text-indigo-400 mr-2"></i>문제 해설 검토</h3><div class="flex gap-2 text-xs"><button id="filterAllBtn" onclick="filterReview('all')" class="px-3 py-1.5 bg-indigo-600 rounded-md">전체</button><button id="filterWrongBtn" onclick="filterReview('wrong')" class="px-3 py-1.5 bg-slate-700 rounded-md">오답만</button></div></div><div id="reviewContainer" class="space-y-5"></div></div>
-</section>
-</main><script src="questions.js"></script><script src="app.js"></script></body></html>
+<body><div id="root"></div><script src="./questions.js"></script><script src="./app.js"></script></body>
+</html>
