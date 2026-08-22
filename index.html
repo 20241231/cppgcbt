@@ -1,69 +1,769 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" class="h-full bg-slate-900 text-slate-100">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CPPG CBT 기출문제 풀이</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>실전 CBT 모의고사</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    :root { --primary: #2563eb; --danger: #dc2626; --bg: #f8fafc; }
-    body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
-    .container { max-width: 800px; margin: 0 auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-    .btn { background: var(--primary); color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-right: 8px; }
-    .btn:hover { opacity: 0.9; }
-    .btn-danger { background: var(--danger); }
-    .card { background: #f1f5f9; padding: 16px; border-radius: 8px; margin-bottom: 16px; }
-    .option-btn { display: block; width: 100%; text-align: left; background: white; border: 1px solid #cbd5e1; padding: 12px; margin: 8px 0; border-radius: 6px; cursor: pointer; }
-    .option-btn.selected { border-color: var(--primary); background: #eff6ff; font-weight: bold; }
-    .option-btn.correct { background: #dcfce7; border-color: #16a34a; }
-    .option-btn.incorrect { background: #fee2e2; border-color: var(--danger); }
-    .explanation { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin-top: 12px; border-radius: 4px; }
-    .hidden { display: none; }
-    .progress-bar { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-bottom: 16px; }
-    .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    .grid-omr {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+    @media (min-width: 640px) {
+      .grid-omr {
+        grid-template-columns: repeat(10, minmax(0, 1fr));
+      }
+    }
   </style>
 </head>
-<body>
-  <div class="container">
-    <!-- 메뉴 화면 -->
-    <div id="menu-screen">
-      <h1>CPPG CBT 시험 모의고사</h1>
-      <p>총 문제 수: <strong id="total-db-count">0</strong>개 중복 없음</p>
-      <div class="card">
-        <h3>풀이 모드 선택</h3>
-        <button class="btn" onclick="startQuiz(10)">10문항 빠른 풀이</button>
-        <button class="btn" onclick="startQuiz(100)">100문항 실전 모의고사</button>
-        <button class="btn btn-danger" onclick="startWrongQuiz()">오답노트 (<span id="wrong-count">0</span>개)</button>
+<body class="h-full flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- HEADER -->
+  <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="restartQuiz()">
+        <div class="p-2 bg-indigo-600 rounded-lg text-white">
+          <i class="fa-solid fa-user-shield text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white tracking-wide">CBT 합격 마스터</h1>
+          <p class="text-xs text-slate-400">실전 모의고사</p>
+        </div>
+      </div>
+
+      <!-- Live Quiz Header Info -->
+      <div id="quizHeaderInfo" class="hidden flex items-center space-x-6">
+        <div class="flex items-center space-x-2 bg-slate-900 px-3 py-1.5 rounded-md border border-slate-700">
+          <i class="fa-regular fa-clock text-amber-400"></i>
+          <span id="timer" class="font-mono text-sm sm:text-base font-semibold text-amber-300">150:00</span>
+        </div>
+        <div class="hidden md:flex items-center space-x-2 bg-slate-900 px-3 py-1.5 rounded-md border border-slate-700 text-xs">
+          <span class="text-slate-400">풀이 완료:</span>
+          <span id="answeredCount" class="font-bold text-indigo-400">0</span>
+          <span class="text-slate-500">/</span>
+          <span id="totalCountDisplay">100</span>
+        </div>
+        <button id="finishBtn" onclick="submitQuizConfirm()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1.5 rounded-md font-semibold text-sm transition flex items-center space-x-1.5 shadow-lg shadow-emerald-900/30">
+          <i class="fa-solid fa-check"></i>
+          <span>답안 제출</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col">
+
+    <!-- VIEW 1: HOME & MODE SELECTOR -->
+    <div id="homeView" class="flex-1 flex flex-col justify-center items-center my-auto py-10">
+      <div class="max-w-2xl w-full text-center space-y-6">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium">
+          <i class="fa-solid fa-key"></i>
+          <span>최신 출제 기준 완벽 반영 (5대 과목 통합)</span>
+        </div>
+        
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          한 번에 합격하는 <br>
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">정보보안기사 실전 CBT 모의고사</span>
+        </h2>
+        
+        <p class="text-slate-400 text-sm sm:text-base leading-relaxed">
+          시스템 보안, 네트워크 보안, 애플리케이션 보안, 정보보안 일반(암호학/개념), 정보보안 관리 및 법률 등 <br class="hidden sm:inline">
+          핵심 이론과 기출 변형 문항을 실전 CBT 환경에서 완벽히 연습하세요.
+        </p>
+
+        <!-- Mode Select Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left pt-4">
+          <div onclick="startQuiz(100)" class="cursor-pointer group relative bg-slate-800/80 hover:bg-slate-800 p-6 rounded-2xl border border-slate-700 hover:border-indigo-500/50 transition-all duration-300 shadow-xl hover:shadow-indigo-500/10">
+            <div class="w-12 h-12 bg-indigo-600/20 text-indigo-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-file-shield text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">실전 모의고사 (100문항)</h3>
+            <p class="text-xs text-slate-400 mt-2">실제 시험과 동일한 5과목 100문항 세트 (제한시간 150분). 과락 여부 및 OMR 가채점 제공.</p>
+            <div class="mt-4 flex items-center text-xs font-semibold text-indigo-400">
+              시험 시작하기 <i class="fa-solid fa-arrow-right ml-1 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+
+          <div onclick="startQuiz(20)" class="cursor-pointer group relative bg-slate-800/80 hover:bg-slate-800 p-6 rounded-2xl border border-slate-700 hover:border-cyan-500/50 transition-all duration-300 shadow-xl hover:shadow-cyan-500/10">
+            <div class="w-12 h-12 bg-cyan-600/20 text-cyan-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-bolt text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white group-hover:text-cyan-300 transition-colors">스피드 파이널 (20문항)</h3>
+            <p class="text-xs text-slate-400 mt-2">핵심 쟁점 위주 빠른 20문항 요약 점검 (제한시간 30분). 출퇴근 및 대중교통 이동 시 추천.</p>
+            <div class="mt-4 flex items-center text-xs font-semibold text-cyan-400">
+              스피드 풀기 <i class="fa-solid fa-arrow-right ml-1 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Key Features List -->
+        <div class="pt-6 border-t border-slate-800 grid grid-cols-3 gap-2 text-center text-xs text-slate-400">
+          <div><i class="fa-solid fa-layer-group text-indigo-400 mr-1"></i> 과목별 자동 배분</div>
+          <div><i class="fa-solid fa-receipt text-emerald-400 mr-1"></i> 과락 판정 & 상세해설</div>
+          <div><i class="fa-solid fa-border-all text-amber-400 mr-1"></i> 실시간 OMR 연동</div>
+        </div>
       </div>
     </div>
 
-    <!-- 문제 풀이 화면 -->
-    <div id="quiz-screen" class="hidden">
-      <div class="progress-bar"><div id="progress" class="progress-fill"></div></div>
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span id="quiz-status">문제 1 / 10</span>
-        <button class="btn btn-danger" onclick="exitQuiz()">exit</button>
+    <!-- VIEW 2: QUIZ TESTING VIEW -->
+    <div id="quizView" class="hidden flex-1 flex flex-col lg:flex-row gap-6">
+      
+      <!-- Main Question Panel -->
+      <div class="flex-1 bg-slate-800/90 rounded-2xl border border-slate-700 p-5 sm:p-7 flex flex-col justify-between shadow-xl">
+        <div>
+          <!-- Question Category & Number -->
+          <div class="flex items-center justify-between pb-4 mb-5 border-b border-slate-700/80">
+            <span id="questionCategory" class="px-2.5 py-1 bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 rounded text-xs font-semibold">
+              시스템 보안
+            </span>
+            <span class="text-xs font-medium text-slate-400">
+              문제 <span id="currentQNum" class="text-white font-bold text-base">1</span> / <span id="totalQNum">100</span>
+            </span>
+          </div>
+
+          <!-- Question Text -->
+          <h3 id="questionText" class="text-base sm:text-lg font-bold text-slate-100 leading-relaxed mb-6">
+            문제를 불러오는 중입니다...
+          </h3>
+
+          <!-- Options List -->
+          <div id="optionsContainer" class="space-y-3">
+            <!-- Dynamically populated options -->
+          </div>
+        </div>
+
+        <!-- Question Navigation Buttons -->
+        <div class="flex items-center justify-between pt-6 mt-6 border-t border-slate-700/80">
+          <button id="prevBtn" onclick="navigateQuestion(-1)" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 rounded-lg text-sm font-semibold transition flex items-center space-x-2">
+            <i class="fa-solid fa-chevron-left"></i>
+            <span>이전 문제</span>
+          </button>
+
+          <button id="bookmarkBtn" onclick="toggleBookmark()" class="px-3 py-2 bg-slate-900/60 border border-slate-700 hover:border-amber-500 text-slate-400 hover:text-amber-400 rounded-lg text-xs font-medium transition flex items-center space-x-1.5">
+            <i id="bookmarkIcon" class="fa-regular fa-bookmark"></i>
+            <span>검토 표시</span>
+          </button>
+
+          <button id="nextBtn" onclick="navigateQuestion(1)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold transition flex items-center space-x-2 shadow-md shadow-indigo-900/30">
+            <span>다음 문제</span>
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
       </div>
-      <div id="question-box" class="card" style="margin-top: 12px;"></div>
-      <div id="options-box"></div>
-      <div id="explanation-box" class="explanation hidden"></div>
-      <div style="margin-top: 16px;">
-        <button id="submit-btn" class="btn" onclick="checkAnswer()">정답 확인</button>
-        <button id="next-btn" class="btn hidden" onclick="nextQuestion()">다음 문제</button>
+
+      <!-- OMR Navigation Sidebar -->
+      <div class="w-full lg:w-80 bg-slate-800/90 rounded-2xl border border-slate-700 p-5 flex flex-col justify-between shadow-xl">
+        <div>
+          <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-700">
+            <h4 class="font-bold text-slate-200 text-sm flex items-center space-x-2">
+              <i class="fa-solid fa-table-cells text-indigo-400"></i>
+              <span>OMR 답안 현황</span>
+            </h4>
+            <span class="text-xs text-slate-400">클릭 시 해당 문제 이동</span>
+          </div>
+
+          <!-- OMR Buttons Grid -->
+          <div id="omrGrid" class="grid-omr max-h-[350px] lg:max-h-[500px] overflow-y-auto p-1 pr-2">
+            <!-- Dynamically generated OMR cells -->
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="pt-4 border-t border-slate-700 grid grid-cols-3 gap-2 text-[11px] text-slate-400 text-center">
+          <div class="flex items-center space-x-1 justify-center"><span class="w-2.5 h-2.5 bg-slate-700 rounded-full inline-block"></span><span>미풀이</span></div>
+          <div class="flex items-center space-x-1 justify-center"><span class="w-2.5 h-2.5 bg-indigo-600 rounded-full inline-block"></span><span>답안선택</span></div>
+          <div class="flex items-center space-x-1 justify-center"><span class="w-2.5 h-2.5 bg-amber-500 rounded-full inline-block"></span><span>검토표시</span></div>
+        </div>
       </div>
     </div>
 
-    <!-- 결과 화면 -->
-    <div id="result-screen" class="hidden">
-      <h2>시험 결과</h2>
-      <div class="card">
-        <p>점수: <strong id="final-score">0</strong> / <span id="max-score">0</span> (<span id="score-percent">0</span>%)</p>
-      </div>
-      <button class="btn" onclick="showMenu()">메인으로 이동</button>
-      <button class="btn btn-danger" onclick="startWrongQuiz()">오답노트 풀기</button>
-    </div>
-  </div>
+    <!-- VIEW 3: RESULT & SCORE VIEW -->
+    <div id="resultView" class="hidden flex-1 flex flex-col space-y-6">
+      
+      <!-- Summary Score Banner -->
+      <div class="bg-slate-800/90 rounded-2xl border border-slate-700 p-6 sm:p-8 shadow-xl text-center relative overflow-hidden">
+        <div id="scoreBadge" class="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full text-xs font-bold mb-3">
+          <!-- Pass/Fail Badge -->
+        </div>
 
-  <script src="questions.js"></script>
-  <script src="app.js"></script>
+        <h2 id="resultTitle" class="text-2xl sm:text-3xl font-extrabold text-white mb-2">모의고사 성적 결과</h2>
+        <p id="resultSubtitle" class="text-slate-400 text-sm max-w-lg mx-auto">정보보안기사 합격 기준: 평균 60점 이상 (단, 과목별 40점 미만 시 과락 불합격).</p>
+
+        <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
+          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/80">
+            <span class="block text-xs text-slate-400 mb-1">최종 평균 점수</span>
+            <span id="scoreText" class="text-3xl font-black text-indigo-400">0점</span>
+          </div>
+          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/80">
+            <span class="block text-xs text-slate-400 mb-1">정답 문항</span>
+            <span id="correctCountText" class="text-3xl font-black text-emerald-400">0 / 0</span>
+          </div>
+          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/80">
+            <span class="block text-xs text-slate-400 mb-1">소요 시간</span>
+            <span id="timeTakenText" class="text-2xl font-black text-amber-400">00:00</span>
+          </div>
+          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/80">
+            <span class="block text-xs text-slate-400 mb-1">정답률</span>
+            <span id="accuracyText" class="text-2xl font-black text-cyan-400">0%</span>
+          </div>
+        </div>
+
+        <!-- Subject Scores Breakdowns -->
+        <div id="subjectBreakdownContainer" class="mt-6 pt-6 border-t border-slate-700/60 max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-5 gap-2 text-xs">
+          <!-- Dynamically populated subject scores -->
+        </div>
+
+        <div class="mt-8 flex justify-center space-x-4">
+          <button onclick="restartQuiz()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm transition shadow-lg shadow-indigo-900/40 flex items-center space-x-2">
+            <i class="fa-solid fa-rotate-right"></i>
+            <span>새 문제로 재도전</span>
+          </button>
+          <button onclick="filterReview('wrong')" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl font-bold text-sm transition flex items-center space-x-2">
+            <i class="fa-solid fa-xmark text-rose-400"></i>
+            <span>오답 문제만 오답노트 확인</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Detailed Question Review Section -->
+      <div class="bg-slate-800/90 rounded-2xl border border-slate-700 p-6 shadow-xl space-y-6">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-700">
+          <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+            <i class="fa-solid fa-list-check text-indigo-400"></i>
+            <span>전체 문제 해설 & 오답 검토</span>
+          </h3>
+          <div class="flex space-x-2 text-xs font-semibold">
+            <button id="filterAllBtn" onclick="filterReview('all')" class="px-3 py-1.5 bg-indigo-600 text-white rounded-md">전체 문제</button>
+            <button id="filterWrongBtn" onclick="filterReview('wrong')" class="px-3 py-1.5 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded-md">오답만 보기</button>
+          </div>
+        </div>
+
+        <div id="reviewContainer" class="space-y-6">
+          <!-- Dynamically populated detailed review cards -->
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    // --- QUESTION BANK & DETAILED EXPLANATIONS (정보보안기사 핵심 문제) ---
+    const QUESTION_BANK_TEMPLATES = [
+      // 1과목: 시스템 보안
+      {
+        category: "1과목: 시스템 보안",
+        q: "리눅스/유닉스 시스템의 파일 권한 및 보안 설정에 대한 설명 중 가장 옳지 않은 것은?",
+        options: [
+          "SetUID가 설정된 파일은 실행 시 파일 소유자의 권한으로 실행되므로 보안상 각별한 주의가 필요하다.",
+          "Sticky Bit가 설정된 디렉터리 내에서는 모든 사용자가 자유롭게 타인의 파일을 삭제할 수 있다.",
+          "umask 값이 022인 경우, 일반 디렉터리 생성 시 기본 권한은 755(rwxr-xr-x)가 된다.",
+          "/etc/shadow 파일은 암호화된 사용자 패스워드가 저장되며, root 사용자만 접근이 가능해야 한다."
+        ],
+        answer: 1,
+        explanation: "Sticky Bit(예: /tmp 디렉터리)가 설정된 경우, 모든 사용자가 파일 작성을 할 수 있지만 **삭제는 해당 파일의 소유자(Owner) 또는 root 전용**만 가능합니다."
+      },
+      {
+        category: "1과목: 시스템 보안",
+        q: "버퍼 오버플로우(Buffer Overflow) 공격을 방지하기 위한 대응 책으로 올바르지 않은 것은?",
+        options: [
+          "strcpy(), sprintf() 등의 안전하지 않은 함수 대신 strncpy(), snprintf() 등을 사용한다.",
+          "스택 영역에서 코드가 실행되지 않도록 DEP(Data Execution Prevention) / NX Bit 기술을 적용한다.",
+          "메모리 주소를 무작위화하는 ASLR(Address Space Layout Randomization)을 차단한다.",
+          "컴파일 시 스택 가드(Stack Guard / Canary) 옵션을 적용하여 버퍼 변조 여부를 검증한다."
+        ],
+        answer: 2,
+        explanation: "ASLR은 공격자가 메모리 주소를 예측하지 못하도록 주소 공간을 무작위로 배치하는 방어 기법이므로, **차단하는 것이 아니라 적용(활성화)** 해야 합니다."
+      },
+      // 2과목: 네트워크 보안
+      {
+        category: "2과목: 네트워크 보안",
+        q: "TCP 3-Way Handshake 과정의 약점을 이용하여 서버의 Queue를 가득 채움으로써 정상적인 서비스를 방해하는 DoS 공격 기법은?",
+        options: [
+          "SYN Flooding",
+          "Smurf Attack",
+          "Ping of Death",
+          "Teardrop Attack"
+        ],
+        answer: 0,
+        explanation: "SYN Flooding은 SYN 패킷만 대량으로 보낸 후 ACK를 보내지 않아 서버의 Half-Open Connection Queue를 고갈시키는 공격입니다. (Smurf는 ICMP Echo, Ping of Death는 대형 ICMP 패킷, Teardrop은 IP 파편화 허점 이용)"
+      },
+      {
+        category: "2과목: 네트워크 보안",
+        q: "스니핑(Sniffing) 공격을 수행하기 위해 네트워크 상에서 상대방의 MAC 주소를 공격자의 MAC 주소로 속이는 기법은?",
+        options: [
+          "IP Spoofing",
+          "ARP Spoofing",
+          "DNS Spoofing",
+          "DHCP Spoofing"
+        ],
+        answer: 1,
+        explanation: "ARP Spoofing은 ARP Reply 패킷을 위조하여 타겟 호스트의 ARP 캐시 테이블에 저장된 IP-MAC 매핑을 공격자의 MAC 주소로 변조하는 공격 기법입니다."
+      },
+      // 3과목: 애플리케이션 보안
+      {
+        category: "3과목: 애플리케이션 보안",
+        q: "웹 취약점 중 하나인 XSS(Cross-Site Scripting)에 대한 설명으로 가장 옳지 않은 것은?",
+        options: [
+          "웹 애플리케이션 사용자의 브라우저에서 악성 자바스크립트 코드가 실행되도록 하는 공격이다.",
+          "Stored XSS는 악성 스크립트가 데이터베이스나 게시글 형태로 저장되어 불특정 다수에게 피해를 준다.",
+          "Reflected XSS는 URL 파라미터 등에 스크립트를 포함시켜 클릭을 유도하는 방식이다.",
+          "XSS 공격을 완벽히 방어하기 위해서는 데이터베이스 입력 시 PrepareStatement 매개변수화 구문만 사용하면 된다."
+        ],
+        answer: 3,
+        explanation: "PrepareStatement(Parameterized Query)는 **SQL Injection을 방어**하는 핵심 기법입니다. XSS 방어를 위해서는 **입출력 값 검증, HTML Entity 인코딩, HTTPOnly 쿠키 설정** 등이 필요합니다."
+      },
+      {
+        category: "3과목: 애플리케이션 보안",
+        q: "다음 중 전자우편(E-Mail) 보안 기술에 대한 설명으로 옳지 않은 것은?",
+        options: [
+          "PGP(Pretty Good Privacy)는 웹 기반 표준으로서 PKI 기반의 X.509 인증서만을 전적으로 사용한다.",
+          "S/MIME은 MIME 표준을 확장하여 전자서명과 암호화 기능을 제공한다.",
+          "SPF(Sender Policy Framework)는 발신자의 IP가 도메인의 DNS에 등록된 정품 발신 IP인지 검증한다.",
+          "DKIM(DomainKeys Identified Mail)은 전자우편 헤더에 디지털 서명을 첨부하여 위변조 여부를 검증한다."
+        ],
+        answer: 0,
+        explanation: "PGP는 중앙 집중식 PKI(X.509) 대신 사용자들이 서로 신뢰를 보증하는 **Web of Trust(신뢰의 웹)** 모델을 사용하는 대표적 이메일 보안 프로그램입니다."
+      },
+      // 4과목: 정보보안 일반 (암호학)
+      {
+        category: "4과목: 정보보안 일반",
+        q: "대칭키 암호화 알고리즘과 공개키(비대칭키) 암호화 알고리즘의 특성에 대한 비교로 가장 옳은 것은?",
+        options: [
+          "대칭키 암호화는 암·복호화 속도가 빠르지만 키 분배 및 관리가 어렵다는 단점이 있다.",
+          "공개키 암호화는 대칭키에 비해 연산 속도가 매우 빠르고 대용량 데이터 암호화에 적합하다.",
+          "대칭키 암호화의 대표적 알고리즘으로는 RSA, ECC, ElGamal 등이 있다.",
+          "공개키 암호화에서는 암호화 키와 복호화 키가 동일하다."
+        ],
+        answer: 0,
+        explanation: "대칭키 알고리즘(AES, DES, SEED 등)은 **속도가 매우 빠르지만 N명의 사용자 간에 N(N-1)/2 개의 키가 필요하여 키 관리가 어렵습니다.** RSA, ECC 등은 공개키 알고리즘입니다."
+      },
+      {
+        category: "4과목: 정보보안 일반",
+        q: "해시 함수(Hash Function)의 주요 보안 특성에 대한 설명 중 잘못 연결된 것은?",
+        options: [
+          "제1 역상 봉쇄성(Preimage Resistance): 주어진 해시값 y에 대해 h(x) = y를 만족하는 x를 찾는 것이 계산적으로 불가능해야 함",
+          "제2 역상 봉쇄성(Second Preimage Resistance): 주어진 x에 대해 h(x) = h(x')를 만족하는 x' (x ≠ x')를 찾는 것이 계산적으로 불가능해야 함",
+          "충돌 봉쇄성(Collision Resistance): h(x1) = h(x2)를 만족하는 임의의 두 입력값 x1, x2를 찾는 것이 계산적으로 불가능해야 함",
+          "부인 방지성(Non-Repudiation): 단방향 해시 함수 자체만으로 송신자의 신원을 완전 증명하여 부인을 방지할 수 있음"
+        ],
+        answer: 3,
+        explanation: "단방향 해시 함수 자체는 무결성 검증을 제공할 뿐, 송신자의 신원을 증명하거나 **부인을 방지할 수는 없습니다.** 부인 방지를 위해서는 **전자서명(공개키 암호화 연동)**이 필요합니다."
+      },
+      // 5과목: 정보보안 관리 및 법률
+      {
+        category: "5과목: 정보보안 관리 및 법률",
+        q: "ISMS-P(개인정보보호 관리체계) 인증에 대한 설명으로 올바르지 않은 것은?",
+        options: [
+          "관리체계 수립 및 운영, 보호대책 요구사항, 개인정보 처리단계별 요구사항 등 총 3개 영역으로 구성된다.",
+          "ISMS-P 인증의 유효기간은 인증을 취득한 날로부터 3년이다.",
+          "인증 취득 후 매년 1회 이상 사후심사를 받아 관리체계를 유지해야 한다.",
+          "과학기술정보통신부와 개인정보보호위원회가 공동 주관하며, 모든 기업은 매출액에 상관없이 무조건 의무 대상이다."
+        ],
+        answer: 3,
+        explanation: "ISMS-P(또는 ISMS)는 일정 규모 이상의 정보통신서비스 제공자, 매출액/이용자 수 기준을 충족하는 사업자 등이 의무 대상이며, **모든 기업이 무조건 의무 대상은 아닙니다.**"
+      },
+      {
+        category: "5과목: 정보보안 관리 및 법률",
+        q: "개인정보 보호법상 '고유식별정보'에 해당하지 않는 항목은?",
+        options: [
+          "주민등록번호",
+          "운전면허번호",
+          "여권번호",
+          "비밀번호 및 계좌번호"
+        ],
+        answer: 3,
+        explanation: "법정 **고유식별정보 4가지**는 [주민등록번호, 운전면허번호, 여권번호, 외국인등록번호]입니다. 비밀번호 및 계좌번호는 안전성 확보 조치 대상이나 고유식별정보 카테고리에는 포함되지 않습니다."
+      }
+    ];
+
+    // Dynamic Bank Builder
+    function generateDynamicQuestionBank(count) {
+      const bank = [];
+      for (let i = 0; i < count; i++) {
+        const templateIndex = i % QUESTION_BANK_TEMPLATES.length;
+        const template = QUESTION_BANK_TEMPLATES[templateIndex];
+        
+        const qObj = {
+          id: i + 1,
+          category: template.category,
+          q: `[유형 ${Math.floor(i / QUESTION_BANK_TEMPLATES.length) + 1}] ${template.q}`,
+          options: [...template.options],
+          answer: template.answer,
+          explanation: template.explanation
+        };
+        bank.push(qObj);
+      }
+      return bank.sort(() => Math.random() - 0.5);
+    }
+
+    // --- APP STATE ---
+    let totalQuestions = 100;
+    let questions = [];
+    let userAnswers = {};
+    let bookmarked = {};
+    let currentIdx = 0;
+    let timerInterval = null;
+    let secondsLeft = 150 * 60;
+    let timeSpentSeconds = 0;
+
+    function startQuiz(numQuestions) {
+      totalQuestions = numQuestions;
+      questions = generateDynamicQuestionBank(1000).slice(0, totalQuestions);
+      userAnswers = {};
+      bookmarked = {};
+      currentIdx = 0;
+      secondsLeft = (totalQuestions === 100) ? 150 * 60 : 30 * 60;
+      timeSpentSeconds = 0;
+
+      // Update UI Views
+      document.getElementById('homeView').classList.add('hidden');
+      document.getElementById('resultView').classList.add('hidden');
+      document.getElementById('quizView').classList.remove('hidden');
+      document.getElementById('quizHeaderInfo').classList.remove('hidden');
+
+      document.getElementById('totalQNum').innerText = totalQuestions;
+      document.getElementById('totalCountDisplay').innerText = totalQuestions;
+
+      buildOMRGrid();
+      renderQuestion();
+      startTimer();
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        secondsLeft--;
+        timeSpentSeconds++;
+        updateTimerDisplay();
+
+        if (secondsLeft <= 0) {
+          clearInterval(timerInterval);
+          alert('시험 제한 시간이 모두 종료되었습니다. 작성된 답안을 자동으로 제출합니다.');
+          submitQuiz();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const mins = Math.floor(secondsLeft / 60);
+      const secs = secondsLeft % 60;
+      document.getElementById('timer').innerText = 
+        `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function buildOMRGrid() {
+      const omrGrid = document.getElementById('omrGrid');
+      omrGrid.innerHTML = '';
+
+      for (let i = 0; i < totalQuestions; i++) {
+        const btn = document.createElement('button');
+        btn.id = `omr-btn-${i}`;
+        btn.onclick = () => jumpToQuestion(i);
+        btn.className = "h-8 rounded font-semibold text-xs transition flex items-center justify-center border border-slate-700 bg-slate-900 text-slate-400 hover:border-slate-500";
+        btn.innerText = i + 1;
+        omrGrid.appendChild(btn);
+      }
+    }
+
+    function renderQuestion() {
+      const q = questions[currentIdx];
+      
+      document.getElementById('currentQNum').innerText = currentIdx + 1;
+      document.getElementById('questionCategory').innerText = q.category;
+      document.getElementById('questionText').innerText = `${currentIdx + 1}. ${q.q.replace(/\[유형 \d+\]\s*/, '')}`;
+
+      const optionsContainer = document.getElementById('optionsContainer');
+      optionsContainer.innerHTML = '';
+
+      q.options.forEach((opt, idx) => {
+        const isSelected = userAnswers[currentIdx] === idx;
+        const optEl = document.createElement('div');
+        optEl.onclick = () => selectOption(idx);
+        optEl.className = `p-4 rounded-xl border cursor-pointer transition flex items-start space-x-3 ${
+          isSelected 
+            ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-md shadow-indigo-950/50' 
+            : 'bg-slate-900/60 border-slate-700/80 text-slate-300 hover:border-slate-600 hover:bg-slate-900'
+        }`;
+
+        optEl.innerHTML = `
+          <div class="w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 ${
+            isSelected ? 'border-indigo-400 bg-indigo-500 text-white' : 'border-slate-600 text-slate-400'
+          }">
+            ${idx + 1}
+          </div>
+          <div class="text-sm leading-relaxed">${opt}</div>
+        `;
+        optionsContainer.appendChild(optEl);
+      });
+
+      document.getElementById('prevBtn').disabled = (currentIdx === 0);
+      document.getElementById('nextBtn').innerText = (currentIdx === totalQuestions - 1) ? '마지막 문제' : '다음 문제';
+
+      const bookmarkIcon = document.getElementById('bookmarkIcon');
+      if (bookmarked[currentIdx]) {
+        bookmarkIcon.className = "fa-solid fa-bookmark text-amber-400";
+      } else {
+        bookmarkIcon.className = "fa-regular fa-bookmark text-slate-400";
+      }
+
+      updateOMRGrid();
+    }
+
+    function selectOption(optIdx) {
+      userAnswers[currentIdx] = optIdx;
+      renderQuestion();
+      updateAnsweredCount();
+    }
+
+    function toggleBookmark() {
+      bookmarked[currentIdx] = !bookmarked[currentIdx];
+      renderQuestion();
+    }
+
+    function navigateQuestion(direction) {
+      const newIdx = currentIdx + direction;
+      if (newIdx >= 0 && newIdx < totalQuestions) {
+        currentIdx = newIdx;
+        renderQuestion();
+      }
+    }
+
+    function jumpToQuestion(idx) {
+      currentIdx = idx;
+      renderQuestion();
+    }
+
+    function updateOMRGrid() {
+      for (let i = 0; i < totalQuestions; i++) {
+        const btn = document.getElementById(`omr-btn-${i}`);
+        if (!btn) continue;
+
+        let bgClasses = "bg-slate-900 text-slate-400 border-slate-700";
+
+        if (i === currentIdx) {
+          bgClasses = "bg-slate-800 text-white border-2 border-indigo-400 font-bold ring-2 ring-indigo-500/20";
+        } else if (bookmarked[i]) {
+          bgClasses = "bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold";
+        } else if (userAnswers[i] !== undefined) {
+          bgClasses = "bg-indigo-600 text-white border-indigo-500 font-bold";
+        }
+
+        btn.className = `h-8 rounded text-xs transition flex items-center justify-center ${bgClasses}`;
+      }
+    }
+
+    function updateAnsweredCount() {
+      const answered = Object.keys(userAnswers).length;
+      document.getElementById('answeredCount').innerText = answered;
+    }
+
+    function submitQuizConfirm() {
+      const answeredCount = Object.keys(userAnswers).length;
+      const unAnswered = totalQuestions - answeredCount;
+
+      let msg = "답안을 제출하시겠습니까?";
+      if (unAnswered > 0) {
+        msg = `아직 풀지 않은 문제가 ${unAnswered}개 있습니다.\n정말 제출하시겠습니까?`;
+      }
+
+      if (confirm(msg)) {
+        submitQuiz();
+      }
+    }
+
+    function submitQuiz() {
+      clearInterval(timerInterval);
+
+      document.getElementById('quizView').classList.add('hidden');
+      document.getElementById('quizHeaderInfo').classList.add('hidden');
+      document.getElementById('resultView').classList.remove('hidden');
+
+      let correctCount = 0;
+      const subjectStats = {};
+
+      questions.forEach((q, idx) => {
+        const cat = q.category;
+        if (!subjectStats[cat]) {
+          subjectStats[cat] = { total: 0, correct: 0 };
+        }
+        subjectStats[cat].total++;
+
+        if (userAnswers[idx] === q.answer) {
+          correctCount++;
+          subjectStats[cat].correct++;
+        }
+      });
+
+      const score = Math.round((correctCount / totalQuestions) * 100);
+      
+      // 과락(40점 미만 과목) 점검
+      let hasFailedSubject = false;
+      Object.keys(subjectStats).forEach(cat => {
+        const catScore = Math.round((subjectStats[cat].correct / subjectStats[cat].total) * 100);
+        if (catScore < 40) hasFailedSubject = true;
+      });
+
+      const isPassed = (score >= 60) && !hasFailedSubject;
+
+      // Update Result Badge
+      const scoreBadge = document.getElementById('scoreBadge');
+      if (isPassed) {
+        scoreBadge.className = "inline-flex items-center space-x-2 px-4 py-1.5 rounded-full text-xs font-bold mb-3 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        scoreBadge.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>정보보안기사 최종 합격권</span>`;
+      } else if (hasFailedSubject) {
+        scoreBadge.className = "inline-flex items-center space-x-2 px-4 py-1.5 rounded-full text-xs font-bold mb-3 bg-rose-500/20 text-rose-400 border border-rose-500/30";
+        scoreBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span>과목 과락으로 인한 불합격 (40점 미만 과목 존재)</span>`;
+      } else {
+        scoreBadge.className = "inline-flex items-center space-x-2 px-4 py-1.5 rounded-full text-xs font-bold mb-3 bg-rose-500/20 text-rose-400 border border-rose-500/30";
+        scoreBadge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i><span>평균 점수 미달 불합격 (60점 미만)</span>`;
+      }
+
+      document.getElementById('scoreText').innerText = `${score}점`;
+      document.getElementById('correctCountText').innerText = `${correctCount} / ${totalQuestions}`;
+      document.getElementById('accuracyText').innerText = `${score}%`;
+
+      const mins = Math.floor(timeSpentSeconds / 60);
+      const secs = timeSpentSeconds % 60;
+      document.getElementById('timeTakenText').innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+      // Render Subject Score Breakdown
+      const sbContainer = document.getElementById('subjectBreakdownContainer');
+      sbContainer.innerHTML = '';
+      Object.keys(subjectStats).forEach(cat => {
+        const stat = subjectStats[cat];
+        const catScore = Math.round((stat.correct / stat.total) * 100);
+        const isFail = catScore < 40;
+
+        const box = document.createElement('div');
+        box.className = `p-3 rounded-lg border text-center ${isFail ? 'bg-rose-950/30 border-rose-700/60' : 'bg-slate-900/60 border-slate-700/60'}`;
+        box.innerHTML = `
+          <span class="block text-[11px] text-slate-400 truncate">${cat.split(':')[1] || cat}</span>
+          <span class="text-base font-bold ${isFail ? 'text-rose-400' : 'text-slate-100'}">${catScore}점</span>
+          <span class="block text-[10px] ${isFail ? 'text-rose-400 font-semibold' : 'text-slate-500'}">${stat.correct}/${stat.total} ${isFail ? '(과락)' : ''}</span>
+        `;
+        sbContainer.appendChild(box);
+      });
+
+      renderReviewCards('all');
+    }
+
+    function renderReviewCards(filter) {
+      const container = document.getElementById('reviewContainer');
+      container.innerHTML = '';
+
+      document.getElementById('filterAllBtn').className = (filter === 'all') 
+        ? "px-3 py-1.5 bg-indigo-600 text-white rounded-md" 
+        : "px-3 py-1.5 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded-md";
+
+      document.getElementById('filterWrongBtn').className = (filter === 'wrong') 
+        ? "px-3 py-1.5 bg-indigo-600 text-white rounded-md" 
+        : "px-3 py-1.5 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded-md";
+
+      questions.forEach((q, idx) => {
+        const userChoice = userAnswers[idx];
+        const isCorrect = (userChoice === q.answer);
+
+        if (filter === 'wrong' && isCorrect) return;
+
+        const card = document.createElement('div');
+        card.className = `p-5 sm:p-6 rounded-xl border ${
+          isCorrect ? 'bg-slate-900/40 border-slate-700' : 'bg-rose-950/10 border-rose-900/50'
+        }`;
+
+        let optionsHTML = '';
+        q.options.forEach((opt, oIdx) => {
+          let optBg = "bg-slate-900/60 border-slate-800 text-slate-400";
+          let badge = "";
+
+          if (oIdx === q.answer) {
+            optBg = "bg-emerald-950/30 border-emerald-600/50 text-emerald-300 font-semibold";
+            badge = `<span class="ml-auto text-xs text-emerald-400 font-bold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">정답</span>`;
+          } else if (oIdx === userChoice && !isCorrect) {
+            optBg = "bg-rose-950/40 border-rose-600/50 text-rose-300 font-semibold";
+            badge = `<span class="ml-auto text-xs text-rose-400 font-bold px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/20">내 제출 답안</span>`;
+          }
+
+          optionsHTML += `
+            <div class="p-3 rounded-lg border text-xs sm:text-sm flex items-center ${optBg}">
+              <span class="font-bold mr-2">${oIdx + 1}.</span>
+              <span>${opt}</span>
+              ${badge}
+            </div>
+          `;
+        });
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-700/60">
+            <span class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+              문제 ${idx + 1} (${q.category})
+            </span>
+            <span class="text-xs font-bold ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}">
+              <i class="${isCorrect ? 'fa-solid fa-check' : 'fa-solid fa-xmark'} mr-1"></i>
+              ${isCorrect ? '정답' : '오답'}
+            </span>
+          </div>
+
+          <h4 class="text-sm sm:text-base font-bold text-slate-100 mb-4">${q.q.replace(/\[유형 \d+\]\s*/, '')}</h4>
+
+          <div class="space-y-2 mb-4">
+            ${optionsHTML}
+          </div>
+
+          <div class="p-4 bg-indigo-950/20 border border-indigo-500/20 rounded-lg text-xs sm:text-sm text-indigo-200 leading-relaxed">
+            <div class="font-bold text-indigo-400 mb-1 flex items-center space-x-1">
+              <i class="fa-solid fa-lightbulb"></i>
+              <span>상세 출제 해설</span>
+            </div>
+            ${q.explanation}
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      if (container.children.length === 0 && filter === 'wrong') {
+        container.innerHTML = `
+          <div class="text-center py-10 text-slate-400 text-sm">
+            <i class="fa-solid fa-circle-check text-3xl text-emerald-400 mb-2 block"></i>
+            축하합니다! 오답이 없습니다. 모든 문제를 맞추셨습니다.
+          </div>
+        `;
+      }
+    }
+
+    function filterReview(type) {
+      renderReviewCards(type);
+    }
+
+    function restartQuiz() {
+      clearInterval(timerInterval);
+      document.getElementById('resultView').classList.add('hidden');
+      document.getElementById('quizView').classList.add('hidden');
+      document.getElementById('quizHeaderInfo').classList.add('hidden');
+      document.getElementById('homeView').classList.remove('hidden');
+    }
+  </script>
 </body>
 </html>
